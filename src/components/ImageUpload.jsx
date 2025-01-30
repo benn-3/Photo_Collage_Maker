@@ -1,27 +1,21 @@
-import React from "react";
-import "./ImageUpload.css";
+import React, { useState } from "react";
+import CollageCanvas from "./CollageCanvas";
 
-const ImageUpload = ({ onUpload }) => {
-  const handleFileChange = (event) => {
-    const files = Array.from(event.target.files);
-    const uploadedImages = files.map((file) => URL.createObjectURL(file));
-    onUpload(uploadedImages);
+const ImageUpload = () => {
+  const [images, setImages] = useState([]);
+
+  const handleUpload = (uploadedImages) => {
+    setImages(uploadedImages);
   };
 
   return (
-    <div className="image-upload">
-      {/* Styled label as the button */}
-      <label htmlFor="file-upload" className="upload-button">
-        Upload Images
-      </label>
-      {/* Hidden file input */}
-      <input
-        id="file-upload"
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleFileChange}
-      />
+    <div style={{ textAlign: "center" }}>
+      <input type="file" multiple accept="image/*" onChange={(e) => {
+        const files = Array.from(e.target.files);
+        const uploadedImages = files.map((file) => URL.createObjectURL(file));
+        handleUpload(uploadedImages);
+      }} />
+      {images.length > 0 && <CollageCanvas images={images} />}
     </div>
   );
 };

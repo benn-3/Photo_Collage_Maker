@@ -1,81 +1,57 @@
-// import React from "react";
-// import { useDrag, useDrop } from "react-dnd";
-// import "./CollageCanvas.css";
+import React, { useRef, useEffect } from "react";
 
-// const ItemTypes = { IMAGE: "image" };
+const CollageCanvas = ({ images }) => {
+  const canvasRef = useRef(null);
 
-// const CollageCanvas = ({ images, moveImage }) => {
-//   const ImageBox = ({ src, index }) => {
-//     const [, drag] = useDrag(() => ({
-//       type: ItemTypes.IMAGE,
-//       item: { index },
-//     }));
+  useEffect(() => {
+    if (images.length === 0) return;
 
-//     const [, drop] = useDrop(() => ({
-//       accept: ItemTypes.IMAGE,
-//       hover: (draggedItem) => {
-//         if (draggedItem.index !== index) {
-//           moveImage(draggedItem.index, index);
-//           draggedItem.index = index;
-//         }
-//       },
-//     }));
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
 
-//     return (
-//       <div
-//         ref={(node) => drag(drop(node))}
-//         className="image-box"
-//       >
-//         <img src={src} alt="Uploaded" style={{ width: "100%", height: "100%" }} />
-//       </div>
-//     );
-//   };
+    const canvasWidth = 800;
+    const canvasHeight = 600;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-//   return (
-//     <div className="grid">
-//       {images.map((src, index) => (
-//         <ImageBox key={index} src={src} index={index} />
-//       ))}
-//     </div>
-//   );
-// };
+    let x = 10, y = 10;
+    const imgSize = 150;
 
-// export default CollageCanvas;
-import React from "react";
-import { useDrag, useDrop } from "react-dnd";
-import "./CollageCanvas.css";
+    const loadImages = images.map((src) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => resolve(img);
+      });
+    });
 
-const CollageCanvas = ({ images, moveImage }) => {
-  const ItemTypes = { IMAGE: "image" };
-
-  const ImageBox = ({ src, index }) => {
-    const [, drag] = useDrag(() => ({
-      type: ItemTypes.IMAGE,
-      item: { index },
-    }));
-
-    const [, drop] = useDrop(() => ({
-      accept: ItemTypes.IMAGE,
-      hover: (draggedItem) => {
-        if (draggedItem.index !== index) {
-          moveImage(draggedItem.index, index);
-          draggedItem.index = index;
+    Promise.all(loadImages).then((loadedImages) => {
+      loadedImages.forEach((img) => {
+        ctx.drawImage(img, x, y, imgSize, imgSize);
+        x += imgSize + 10;
+        if (x + imgSize > canvasWidth) {
+          x = 10;
+          y += imgSize + 10;
         }
-      },
-    }));
+      });
+    });
+  }, [images]);
 
-    return (
-      <div ref={(node) => drag(drop(node))} className="image-box">
-        <img src={src} alt="Uploaded" />
-      </div>
-    );
+  const downloadCanvas = () => {
+    const canvas = canvasRef.current;
+    const link = document.createElement("a");
+    link.download = "collage.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   };
 
   return (
-    <div className="grid">
-      {images.map((src, index) => (
-        <ImageBox key={index} src={src} index={index} />
-      ))}
+    <div>
+      <button onClick={downloadCanvas} style={{ margin: "10px" }}>
+        Download Collage
+      </button>
+      <canvas ref={canvasRef} style={{ border: "1px solid black" }}></canvas>
     </div>
   );
 };
